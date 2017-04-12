@@ -9,7 +9,11 @@ var sprachen=[
 		 "Quellen":"Quellen",
 		 "Zählervon":"Zähler von",
 		 "bis":"bis",
-		 "Stichoptionen":"Stichoptionen"
+		 "Stichoptionen":"Stichoptionen",
+		 "Zielordner":"Zielordner",
+		 "select":"auswählen",
+		 "Aktion":"Aktion",
+		 "Berechnungstart":"Berechnung starten"
 		 
 		}
 	},
@@ -20,7 +24,11 @@ var sprachen=[
 		 "Quellen":"Sources",
 		 "Zählervon":"Counter from",
 		 "bis":"to",
-		 "Stichoptionen":"Optionen"
+		 "Stichoptionen":"Optionen",
+		 "Zielordner":"Destination folder",
+		 "select":"select",
+		 "Aktion":"Action",
+		 "Berechnungstart":"Start calculation"
 	 }
 	}
 ];

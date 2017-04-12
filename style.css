@@ -28,7 +28,7 @@ body *{
 	-moz-border-radius: 10px;
 	border-radius: 10px;	
 	margin:5px;
-	margin-top:10px;
+	margin-top:13px;
 	padding:10px;
 	background-color:#eee;
 	position:relative;	
@@ -62,6 +62,27 @@ body *{
 .nodeset input[type="number"]{
 	width:50px;
 }
+
+
+.hiddenbutton{
+	display:none;
+}
+.butt100px{
+	width:100px;
+}
+.inputlabelpath{
+	font-size:10pt;
+	color:#444;
+	margin:0 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: calc(100% - 130px);
+	display:inline-block;
+}
+
+.progressbar{}
+
 
 
 /* responsive */

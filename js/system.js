@@ -2,12 +2,18 @@
 
 var vrstich_app=function(){
 	var Programmeinstellungen={//als Einstellungen gespeichert
-		windowsize:{x:0,y:0,width:0,height:0}
+		windowsize:{x:0,y:0,width:0,height:0},
+		showDevTool:true
 	};
 	
 	var zielNode;
 	
-	var o_quellen=[];
+	var programmdaten={
+		quellen:[],
+		inputziel:undefined,
+		prograssbar:undefined
+	}
+	
 	
 	//--basic--
 	var gE=function(id){if(id=="")return undefined; else return document.getElementById(id);}
@@ -100,7 +106,7 @@ var vrstich_app=function(){
 	}
 	
 	//--Elemente--
-	var InputDateiStream=function(ziel){
+	var InputDateiStream=function(ziel,pretext){
 		var data={
 			"inputfiles":undefined,
 			"countFrom":0,
@@ -112,19 +118,24 @@ var vrstich_app=function(){
 		
 		var span;
 		var set=cE(ziel,"p");
+		
+		span=cE(set,"span");
+		span.innerHTML=pretext;
+		
+		
 		var input=cE(set,"input");
 		input.accept="image/*";
 		input.type="file";
 		
 		
-		span=cE(set,"label");
+		span=cE(set,"span");
 		span.innerHTML=getWort("Zähler von");
 		
 		var inputFrom=cE(set,"input");
 		inputFrom.type="number";
 		inputFrom.min="0";
 			
-		span=cE(set,"label");
+		span=cE(set,"span");
 		span.innerHTML=getWort("bis");
 		
 		var inputTo=cE(set,"input");
@@ -182,6 +193,57 @@ var vrstich_app=function(){
 		
 	}
 
+	var InputOrdner=function(ziel){
+		var data={
+			"pfad":""
+		}
+		
+		//API
+		this.getData=function(){return data;}
+		
+		
+		//Elemente
+		var input=cE(ziel,"input",undefined,"hiddenbutton");
+		input.type="file";
+		input.webkitdirectory="webkitdirectory";
+		
+		var input2=cE(ziel,"input",undefined,"butt100px");
+		input2.type="button";
+		input2.value=getWort("select");
+		
+		var spaninfo=cE(ziel,"span",undefined,"inputlabelpath");
+		spaninfo.innerHTML="";
+		
+		//innerfunc
+		var changeDatei=function(e){
+			if(e.target.files.length>0){
+				var file=e.target.files[0];//.path .name .size .type			
+				data.pfad=file.path;
+				spaninfo.innerHTML=data.pfad;
+			}
+			
+			console.log(data,e);
+		}
+		var clickinpb=function(e){
+			input.click();
+		}
+		
+		//Events
+		input.addEventListener("change",changeDatei);
+		input2.addEventListener("click",clickinpb);
+		
+		
+		
+	}
+	
+	
+	var Progressbar=function(ziel,optionen){
+		//[ ...text... ]
+		var base=cE(ziel,"div",undefined,"progressbar");
+		var balken=cE(base,"div",undefined,"progressbarbalken");
+		
+		
+	}
 	
 	//--Programm--
 	var optionenLoaded=function(datjson){
@@ -208,7 +270,7 @@ var vrstich_app=function(){
 	var CreateProgramm=function(){
 		zielNode.innerHTML="";
 		
-		var i,nodeset,h1,input;
+		var i,nodeset,h1,input,span;
 		
 		
 		//Quellen
@@ -217,18 +279,38 @@ var vrstich_app=function(){
 		h1.innerHTML=getWort("Quellen");
 		//[Pfad zu ersten Datei] [Anzahl Bilder/vonbis]
 		
-		o_quellen.push(new InputDateiStream(nodeset));
-		o_quellen.push(new InputDateiStream(nodeset));
-		o_quellen.push(new InputDateiStream(nodeset));
-		o_quellen.push(new InputDateiStream(nodeset));
-		o_quellen.push(new InputDateiStream(nodeset));
-		o_quellen.push(new InputDateiStream(nodeset));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"1"));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"2"));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"3"));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"4"));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"o"));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"u"));
+		
+		
+		//Zielordner
+		nodeset=cE(zielNode,"div",undefined,"nodeset");
+		h1=cE(nodeset,"h1");
+		h1.innerHTML=getWort("Zielordner");
+		
+		programmdaten.inputziel=new InputOrdner(nodeset);
+		
 		
 		//Optionen
 		nodeset=cE(zielNode,"div",undefined,"nodeset");
 		h1=cE(nodeset,"h1");
 		h1.innerHTML=getWort("Stichoptionen");
 		
+		
+		//Action
+		nodeset=cE(zielNode,"div",undefined,"nodeset");
+		h1=cE(nodeset,"h1");
+		h1.innerHTML=getWort("Aktion");
+		
+		input=cE(nodeset,"input");
+		input.type="button";
+		input.value=getWort("Berechnungstart");
+		
+		programmdaten.prograssbar=new Progressbar();
 		
 		
 	}
