@@ -1,0 +1,31 @@
+{
+  "name": "PROSTd",
+  "productName": "VRStitch",
+  "description": "360VRPicSticher",
+  "version": "0.0.1",
+  "author": "Andreas Kosmehl (ak@a-d-k.de)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "keywords": [
+    "Electron",
+    "vr",
+    "sticht",	"3d"
+  ],
+  "homepage": "http://www.a-d-k.de",
+  "devDependencies": {
+    "electron-prebuilt": "^1.2.0"
+  },
+  "build": {
+    "appId": "de.adk.VRStitch",
+    "mac": {
+		"category": "public.app-category.utilities"
+    },
+    "win": {
+		"icon": "build/VRStitch.ico"
+    }
+  }
+}
