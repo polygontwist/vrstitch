@@ -13,7 +13,8 @@ var sprachen=[
 		 "Zielordner":"Zielordner",
 		 "select":"auswählen",
 		 "Aktion":"Aktion",
-		 "Berechnungstart":"Berechnung starten"
+		 "Berechnungstart":"Berechnung starten",
+		 "Berechnungstop":"Berechnung stoppen"
 		 
 		}
 	},
@@ -28,7 +29,8 @@ var sprachen=[
 		 "Zielordner":"Destination folder",
 		 "select":"select",
 		 "Aktion":"Action",
-		 "Berechnungstart":"Start calculation"
+		 "Berechnungstart":"Start calculation",
+		 "Berechnungstop":"Stop calculation"
 	 }
 	}
 ];

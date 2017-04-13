@@ -9,6 +9,7 @@ const electron = require('electron');
 const {remote} = electron;
 const {dialog, BrowserWindow} = remote;
 const fs = require('fs');
+const nativeImage = require('electron').nativeImage;
 
 var path = require('path');
 path.join(__dirname, 'templates');
@@ -78,6 +79,17 @@ var AppBridge=function(){//temporärres Objekt für DatiIO, etc.
 		
 		refunction=auswertfunc;
 		
+		if(aktion=="getImage"){			
+			var img = nativeImage.createFromPath(datenJSON.url);
+			var dataRE={"status":200,"msg":"OK","img":img};
+			if(refunction!=undefined)refunction(dataRE);
+		}
+		else
+		if(aktion=="getfile"){
+			if(datenJSON.url!=undefined)
+				readFile(datenJSON.url);
+		}
+		else
 		if(aktion=="getoptionen"){
 			readFile(basepathDATA+DateinameOptionen);
 		}
