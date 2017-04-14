@@ -1,9 +1,14 @@
 "use strict";
 
+//var canvasBuffer = require('electron-canvas-to-buffer');
+//const nativeImage = require('electron').nativeImage;
+
 var vrstich_app=function(){
 	var Programmeinstellungen={//als Einstellungen gespeichert
 		windowsize:{x:0,y:0,width:0,height:0},
-		showDevTool:true
+		showDevTool:true,
+		zieldateiname:"",
+		inputzieldateityp:"png"
 	};
 	
 	var zielNode;
@@ -12,6 +17,7 @@ var vrstich_app=function(){
 		quellen:[],
 		stitchoptionen:undefined,
 		inputziel:undefined,
+		inputzieldateiname:undefined,
 		progressbar:undefined,
 		iscalc:false,
 		startbutt:undefined,
@@ -163,7 +169,7 @@ var vrstich_app=function(){
 		}
 	}
 	
-	
+	var gAB=new AppBridge();
 	
 	//--API---
 	
@@ -610,6 +616,7 @@ var vrstich_app=function(){
 			//gespeicherte Propertys anfügen/ersetzen
 			for( property in indat ) {
 					Programmeinstellungen[property]=indat[property];
+					//console.log(property,indat[property]);					
 			}
 			console.log("setProgrammeinstellungen",Programmeinstellungen);
 		}
@@ -701,12 +708,61 @@ var vrstich_app=function(){
 		programmdaten.inputziel=new InputOrdner(nodeset,checkstartAvailable);
 		
 		
+		p=cE(nodeset,"span",undefined,"inputlabelfilename");
+		p.innerHTML=getWort("Dateiname")+':';
+		input=cE(nodeset,"input");
+		input.type="text";	
+		input.value=Programmeinstellungen.zieldateiname;
+		input.addEventListener("change",function(e){
+					Programmeinstellungen.zieldateiname=this.value;
+					gAB.DataIO(	"setoptionen", 
+						function(data){if(data.status!=200)console.log(data);},
+						Programmeinstellungen
+					);
+				})
+		programmdaten.inputzieldateiname=input;
+		p=cE(nodeset,"span",undefined,"inputlabelfilename");
+		p.innerHTML=getWort("autonummer");
+		
+		input=cE(nodeset,"select");
+		input.addEventListener("change",function(e){
+					Programmeinstellungen.inputzieldateityp=e.target.value;
+					gAB.DataIO(	"setoptionen", 
+							function(data){if(data.status!=200)console.log(data);},
+							Programmeinstellungen
+					);
+				});
+		p=	cE(input,"option");
+		p.value="png";
+		p.innerHTML=".png";
+		p=	cE(input,"option");
+		p.value="jpg";
+		p.innerHTML=".jpg";
+		//+typ (jpg|png)
+		input.value=Programmeinstellungen.inputzieldateityp;
+		
+		
 		//Optionen
 		nodeset=cE(zielNode,"div",undefined,"nodeset");
 		h1=cE(nodeset,"h1");
 		h1.innerHTML=getWort("Stichoptionen");
 		
 		programmdaten.stitchoptionen=new stitchOptionenInputs(nodeset);
+		
+		//Export 3D
+		nodeset=cE(zielNode,"div",undefined,"nodeset");
+		h1=cE(nodeset,"h1");
+		h1.innerHTML=getWort("export3d");
+		
+		input=cE(nodeset,"input");
+		input.type="button";
+		input.value=getWort("export");
+		input.addEventListener("click",
+			function(e){
+					console.log("TODO");
+				}
+			);
+//TODO		
 		
 		
 		
@@ -845,6 +901,19 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	cc,ow+2*ol,ol*2+oh, -90);
 			//oben
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc,ol*3+ow, ol*4+oh*2, 90);
+			
+			drawEckenfiller(cc,ol*2+ow,0,ol,ol,"u|l");
+			drawEckenfiller(cc,ol*2+ow,ol+oh,ol,ol,"o|l");
+			
+			drawEckenfiller(cc,ol+ow,ol*2+oh,ol,ol,"u|r");
+			drawEckenfiller(cc,ol+ow,ol*3+oh*2,ol,ol,"o|r");
+
+			drawEckenfiller(cc,ol*2+ow,ol*2+oh,ol,ol,"u|l");
+			drawEckenfiller(cc,ol*2+ow,ol*3+oh*2,ol,ol,"o|l");
+
+			drawEckenfiller(cc,ol*4+ow*2,ol*2+oh,ol,ol,"u|l");
+			drawEckenfiller(cc,ol*4+ow*2,ol*3+oh*2,ol,ol,"o|l");
+
 		}		
 		if(id=="2"){
 			bb=programmdaten.imageoverlap;
@@ -860,6 +929,19 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ow+3*ol,ol*2+oh, 0);
 			//oben
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*5+ow*2, ol*3+oh*2, 0);
+
+			drawEckenfiller(cc,ol+ow,0,ol,ol,"u|r");
+			drawEckenfiller(cc,ol+ow,ol+oh,ol,ol,"o|r");
+
+			drawEckenfiller(cc,ol*4+ow*2,0,ol,ol,"u|l");
+			drawEckenfiller(cc,ol*4+ow*2,ol+oh,ol,ol,"o|l");
+
+			drawEckenfiller(cc,ol*2+ow,ol*2+oh,ol,ol,"r|o");
+			drawEckenfiller(cc,ol*3+ow*2,ol*2+oh,ol,ol,"l|o");
+
+			drawEckenfiller(cc,ol*4+ow*2,ol*3+oh*2,ol,ol,"r|u");
+			drawEckenfiller(cc,ol*5+ow*3,ol*3+oh*2,ol,ol,"l|u");
+
 		}			
 		if(id=="3"){
 			bb=programmdaten.imageoverlap;
@@ -875,6 +957,19 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ol*3+oh,ol*3+ow*2, 90);
 			//oben
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*2+oh, ow*3+ol*5, -90);
+			
+			drawEckenfiller(cc,0,ol*2+oh,ol,ol,"u|l");
+			drawEckenfiller(cc,0,ol*3+oh*2,ol,ol,"o|l");
+
+			drawEckenfiller(cc,ol*3+ow*2,ol*2+oh,ol,ol,"u|r");
+			drawEckenfiller(cc,ol*3+ow*2,ol*3+oh*2,ol,ol,"o|r");
+
+			drawEckenfiller(cc,ol*5+ow*3,ol*2+oh,ol,ol,"u|r");
+			drawEckenfiller(cc,ol*5+ow*3,ol*3+oh*2,ol,ol,"o|r");
+
+			drawEckenfiller(cc,ol*3+ow*2,0,ol,ol,"u|r");
+			drawEckenfiller(cc,ol*3+ow*2,ol+oh,ol,ol,"o|r");
+
 		}		
 		if(id=="4"){
 			bb=programmdaten.imageoverlap;
@@ -890,6 +985,19 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, 3*ol+ow,3*ol+2*oh, 180);
 			//oben
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, 5*ol+2*ow, 2*ol+oh, 180);
+
+			drawEckenfiller(cc,0,0,ol,ol,"u|l");
+			drawEckenfiller(cc,0,ol+oh,ol,ol,"o|l");
+			
+			drawEckenfiller(cc,ol*2+ow,ol*3+oh*2,ol,ol,"r|u");
+			drawEckenfiller(cc,ol*3+ow*2,ol*3+oh*2,ol,ol,"l|u");
+			
+			drawEckenfiller(cc,ol*4+ow*2,ol*2+oh,ol,ol,"r|o");
+			drawEckenfiller(cc,ol*5+ow*3,ol*2+oh,ol,ol,"l|o");
+			
+			drawEckenfiller(cc,ol*5+ow*3,0,ol,ol,"u|r");
+			drawEckenfiller(cc,ol*5+ow*3,ol+oh,ol,ol,"o|r");
+			
 		}		
 		if(id=="5"){
 			bb=programmdaten.imageoverlap;
@@ -905,6 +1013,19 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ol,ol*3+oh*2, 180);
 			//oben
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, 3*ol+ow,ol+oh, 0);
+			
+			drawEckenfiller(cc,0,ol+oh,ol,ol,"r|u");
+			drawEckenfiller(cc,ol+ow,ol+oh,ol,ol,"l|u");
+
+			drawEckenfiller(cc,ol*2+ow,ol+oh,ol,ol,"r|u");
+			drawEckenfiller(cc,ol*3+ow*2,ol+oh,ol,ol,"l|u");
+
+			drawEckenfiller(cc,ol*4+ow*2,ol+oh,ol,ol,"r|u");
+			drawEckenfiller(cc,ol*5+ow*3,ol+oh,ol,ol,"l|u");
+
+			drawEckenfiller(cc,0,ol*3+oh*2,ol,ol,"r|u");
+			drawEckenfiller(cc,ol+ow,ol*3+oh*2,ol,ol,"l|u");
+
 		}
 		if(id=="6"){
 			bb=programmdaten.imageoverlap;
@@ -922,28 +1043,84 @@ var vrstich_app=function(){
 			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol,ol*2+oh, 180);
 			
 			//eckenfiller
-			//TODO
 			drawEckenfiller(cc,0,0,ol,ol,"r|o");
+			drawEckenfiller(cc,ol+ow,0,ol,ol,"l|o");
+			
+			drawEckenfiller(cc,ol*2+ow,0,ol,ol,"r|o");
+			drawEckenfiller(cc,ol*3+ow*2,0,ol,ol,"l|o");
+			
+			drawEckenfiller(cc,ol*4+ow*2,0,ol,ol,"r|o");
+			drawEckenfiller(cc,ol*5+ow*3,0,ol,ol,"l|o");
+			
+			drawEckenfiller(cc,0,ol*2+oh,ol,ol,"r|o");
+			drawEckenfiller(cc,ol+ow,ol*2+oh,ol,ol,"l|o");
 		}
 		
 	}
 	
 	var drawEckenfiller=function(cc,x,y,b,h ,richtung){
-		//richtung "u|l" "o|r" "r|u" "l|u" "r|o" "l|o" "u|l" "u|r"
-		//         von|langeseite
+		//b=h!
+		//richtung "r|o" "u|l" "o|r" "r|u" "l|u" "l|o" "u|l" "u|r"
+		//         quelle|langeseite
 		var r=richtung.split('|');
+		var qx,qy,qb,qh, zx,zy ,zpos,qpos;
+		
 		var stepx=1,stepy=1,xa=0,ya=0;
 		
-		if(r[0]=="r"){}//stepx=-1;xa=b;
-		if(r[0]=="l"){}
-		if(r[0]=="o"){}
-		if(r[0]=="u"){}//stepy=-1;ya=h;
+		//quellpixelkoordinate
+		if(r[0]=="r"){qx=x+b;	qy=y;	qb=1;	qh=h;}
+		if(r[0]=="l"){qx=x-1;	qy=y;	qb=1;	qh=h;}
+		if(r[0]=="o"){qx=x;		qy=y-1;	qb=b;	qh=1;}
+		if(r[0]=="u"){qx=x;		qy=y+h;	qb=b;	qh=1;}
 		
-		if(r[1]=="r"){}
-		if(r[1]=="l"){}
-		if(r[1]=="o"){}
-		if(r[1]=="u"){}
+		var Quellpixel=cc.getImageData(qx,qy,qb,qh);//vertikal oder senkrecht
+		var qpixel=Quellpixel.data;//r,g,b,a hintereinander
 		
+		var zielpixel=cc.getImageData(x,y,b,h);
+		var zpixel=zielpixel.data;
+		
+		
+		qpos=0;
+		for(zy=0;zy<h;zy++){
+			qpos=zy;
+			for(zx=0;zx<(b-zy);zx++){
+				zpos=0;
+				
+				if(richtung=="r|o"){
+					zpos=((zx+zy)*4)+(zy)*b*4;
+				}
+				if(richtung=="l|o"){
+					zpos=((zx)*4)+(zy)*b*4;
+				}
+				if(richtung=="r|u"){
+					qpos=(h-1)-zy;
+					zpos=((zx+zy)*4)+(h-1-zy)*b*4;
+				}				
+				if(richtung=="l|u"){
+					qpos=(h-1)-zy;
+					zpos=((zx)*4)+(h-1-zy)*b*4;
+				}
+				if(richtung=="u|l"){
+					zpos=((zy)*4)+(h-1-zx)*b*4;
+				}
+				if(richtung=="o|l"){
+					zpos=((zy)*4)+(zx)*b*4;
+				}
+				if(richtung=="o|r"){
+					qpos=(h-1)-zy;
+					zpos=((b-1-zy)*4)+(zx)*b*4;
+				}
+				if(richtung=="u|r"){
+					qpos=(h-1)-zy;
+					zpos=((b-1-zy)*4)+(h-1-zx)*b*4;
+				}
+				zpixel[zpos+0]=qpixel[qpos*4+0];
+				zpixel[zpos+1]=qpixel[qpos*4+1];
+				zpixel[zpos+2]=qpixel[qpos*4+2];
+				zpixel[zpos+3]=qpixel[qpos*4+3];				
+			}			
+		}
+		cc.putImageData(zielpixel,x,y);
 		
 	}
 	
@@ -1047,10 +1224,8 @@ var vrstich_app=function(){
 				}
 			}
 			
-			
-			
 			//canvas speichern
-			
+			saveCanvas();
 			
 			//nächstes Bilderserie (Frame)
 			if(programmdaten.calcpos<maxfiles){
@@ -1068,6 +1243,53 @@ var vrstich_app=function(){
 		
 	}
 	
+
+	//https://github.com/mattdesl/electron-canvas-to-buffer/blob/master/index.js
+	var canvasToImg=function(canvas,type,quality){
+		if(quality==undefined)quality=1;
+		if(quality>1)quality=1;
+		if(quality<0)quality=0;
+		
+		var types = ['image/png', 'image/jpg', 'image/jpeg'];
+		if (types.indexOf(type) === -1) {
+			console.log('unsupported image type ' + type);
+		}
+		
+		var data = canvas.toDataURL(type, quality);
+		
+		var img = typeof nativeImage.createFromDataURL === 'function'
+					? nativeImage.createFromDataURL(data) // electron v0.36+
+					: nativeImage.createFromDataUrl(data) // electron v0.30
+		 
+		 if (/^image\/jpe?g$/.test(type)) {
+			return img.toJpeg(Math.floor(quality * 100))
+		  } else {
+			return img.toPng()
+		}
+		
+	}
+	
+	var saveCanvas=function(){
+		var opfad=Programmeinstellungen['outputOrdner'];
+		if(opfad==undefined)return;
+		var pfad=opfad.pfad+'\\';
+		
+		var dateiname=
+				Programmeinstellungen.zieldateiname
+				+generatenummer(programmdaten.calcpos,4)
+				+"."+Programmeinstellungen.inputzieldateityp;
+		
+		
+		
+		/**/
+		//programmdaten.canvas -->
+		var buffer = canvasToImg(programmdaten.canvas, 'image/'+Programmeinstellungen.inputzieldateityp,1);
+		
+		//writeFile
+		//console.log("writeto",pfad+dateiname);
+		fs.writeFileSync( pfad+dateiname, buffer);
+		
+	}
 	
 	
 }

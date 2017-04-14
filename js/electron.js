@@ -184,6 +184,10 @@ var theAppWindowObjekt=function(){
 		
 	}
 	
+/*	var win=remote.getCurrentWindow();
+		win.webContents.openDevTools();
+*/
+	
 	ini();
 }
 
