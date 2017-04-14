@@ -62,13 +62,16 @@ body *{
 .nodeset input[type="number"]{
 	width:50px;
 }
-
+.nodeset p{
+	margin-bottom:5px;
+}
 
 .hiddenbutton{
 	display:none;
 }
-.butt100px{
-	width:100px;
+.inputfilebutt{
+	height:24px;
+	vertical-align:top;
 }
 .inputlabelpath{
 	font-size:10pt;
@@ -79,6 +82,23 @@ body *{
 	white-space: nowrap;
 	width: calc(100% - 130px);
 	display:inline-block;
+	height:24px;
+	line-height:24px;
+	vertical-align:top;
+}
+
+.inputlabelfile{
+	font-size:10pt;
+	color:#444;
+	margin:0 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: 200px;
+	display:inline-block;
+	height:24px;
+	line-height:24px;
+	vertical-align:top;
 }
 
 .progressbar{
@@ -119,9 +139,30 @@ body *{
 
 .calccanvas{
 	width:calc(100% - 10px);
-	
+	margin: 5px;
+	border:1px solid #ccc; 
 }
 
+
+.vtab { 
+      display: table; 
+      border-collapse:collapse; 
+    }
+.vtab tr { 
+  display:table-row; 
+}
+.vtab td { 
+  display:table-cell; 
+  border:1px solid #ccc; 
+  padding:10px 15px;    
+}
+.vtab td.noborder { 
+  border:0;    
+  padding:15px; 
+  vertical-align:top;
+}
+	
+	
 /* responsive */
 @media screen and (max-width: 650px) {
 	

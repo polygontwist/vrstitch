@@ -10,6 +10,7 @@ var vrstich_app=function(){
 	
 	var programmdaten={
 		quellen:[],
+		stitchoptionen:undefined,
 		inputziel:undefined,
 		progressbar:undefined,
 		iscalc:false,
@@ -188,10 +189,9 @@ var vrstich_app=function(){
 	//--Elemente--
 	var InputDateiStream=function(ziel,id,changefunc){
 		var data={
-			"inputfiles":undefined,
 			"countFrom":0,
 			"countTo":0,
-			"name":"",
+			"name":[],
 			"pfad":"",
 			"counterzeichen":0,
 			"id":id,
@@ -199,37 +199,61 @@ var vrstich_app=function(){
 			"nativeImage":undefined
 		};
 		
-		//var bild=document.createElement("image");
+		var AB=new AppBridge();
 		
-		var span;
-		var set=cE(ziel,"p");
-		
-		span=cE(set,"span");
-		span.innerHTML=id;
-		
-		
-		var input=cE(set,"input");
-		input.accept="image/*";
-		input.type="file";
-		
-		
-		span=cE(set,"span");
-		span.innerHTML=getWort("Zähler von");
-		
-		var inputFrom=cE(set,"input");
-		inputFrom.type="number";
-		inputFrom.min="0";
+		var inputFile,inpFileButt,inpText,inputFrom,inputTo;
 			
-		span=cE(set,"span");
-		span.innerHTML=getWort("bis");
+		var create=function(){
+			var set,span;
+			
+			var set=cE(ziel,"p");
+			span=cE(set,"span");
+			span.innerHTML=data.id;
+			
+			inputFile=cE(set,"input",undefined,"hiddenbutton");
+			inputFile.accept="image/*";
+			inputFile.type="file";
+			
+			inpFileButt=cE(set,"input",undefined,"inputfilebutt");
+			inpFileButt.type="button";
+			inpFileButt.value=getWort("dateiselect");
+			
+			inpText=cE(set,"span",undefined,"inputlabelfile");
+			if(data.name.length==2)
+				inpText.innerHTML=data.name[0]+generatenummer(data.countFrom,data.counterzeichen)+data.name[1];
+				else
+				inpText.innerHTML=getWort("nichtsgewaehlt");
+			
+			//
+			
+			span=cE(set,"span");
+			span.innerHTML=getWort("Zähler von");
+			
+			inputFrom=cE(set,"input");
+			inputFrom.type="number";
+			inputFrom.min="0";
+			inputFrom.value=data.countFrom;
+			
+			span=cE(set,"span");
+			span.innerHTML=getWort("bis");
+			
+			inputTo=cE(set,"input");
+			inputTo.type="number";
+			inputTo.min="0";
+			inputTo.value=data.countTo;
+			
+			//set=cE(ziel,"p");
 		
-		var inputTo=cE(set,"input");
-		inputTo.type="number";
-		inputTo.min="0";
+			//Events
+			inpFileButt.addEventListener("click",function(){inputFile.click();});
+			inputFile.addEventListener("change",changeDatei);
+			inputFrom.addEventListener("change",changeFrom);
+			inputTo.addEventListener("change",changeTo);
+			
+			
+		}
 		
-		set=cE(ziel,"p");
-		//var bild=cE(set,"image");
-		
+			
 		
 		//API
 		this.getData=function(){return data;}
@@ -237,24 +261,53 @@ var vrstich_app=function(){
 		this.loadFileNr=function(nr){
 			var fnum=data.countFrom + nr;
 			var surl=data.pfad+data.name[0]+generatenummer(fnum,data.counterzeichen)+data.name[1];
-			data.ladestatus="load";
-			//console.log("load",surl);
+			data.ladestatus="load";			
+			AB.DataIO("getImage",fileloaded,{"url":surl});
+		}
+		
+		this.showfirstPic=function(){
+			showDatei();
+		}
+		
+		//--func--
+		var showDatei=function(){
+			//zeige erstes Bild an
+			var fnum=data.countFrom;
+			var surl=data.pfad+data.name[0]+generatenummer(fnum,data.counterzeichen)+data.name[1];
+			data.ladestatus="load";			
+			AB.DataIO("getImage",firstfileloaded,{"url":surl});
 			
-			AppBrComIO("getImage",fileloaded,{"url":surl});
+		}
+		
+		var setSetting=function(){
+			var property;
+			var set=Programmeinstellungen['IDS_'+data.id];
+			if(set!=undefined){				
+				for( property in set ) {
+					data[property]=set[property];
+				}
+			}
+		}
+		var saveSetting=function(){
+			Programmeinstellungen['IDS_'+data.id]={
+				"countFrom":data.countFrom,
+				"countTo":data.countTo,
+				"name":data.name,
+				"pfad":data.pfad,
+				"counterzeichen":data.counterzeichen
+			};
+			//savig...
+			AB.DataIO(	"setoptionen", 
+						function(data){
+							if(data.status!=200)console.log(data);
+						},
+						Programmeinstellungen
+					 );
 		}
 		
 		var fileloaded=function(e){
-			//https://electron.atom.io/docs/api/native-image/#nativeimagecreatefromdataurldataurl
-			//https://developer.mozilla.org/de/docs/Web/API/HTMLCanvasElement/toDataURL
-			var img=e.img;
-			//console.log(img.getSize());//.width .height
-			//bild.src=img.toDataURL();
-			
-			//console.log(">>>>",e);
-			data.nativeImage=e.img;
-			//data.bitmap=img.getBitmap();//Buffer of Bitmapdata
-			
-			if(!img.isEmpty())
+			data.nativeImage=e.img;			
+			if(!e.img.isEmpty())
 				data.ladestatus="ready";
 				else
 				data.ladestatus="ERR";
@@ -262,11 +315,16 @@ var vrstich_app=function(){
 			checkLadecyclus();
 		}
 		
+		var firstfileloaded=function(e){
+			if(e.img==undefined)return;
+			
+			data.nativeImage=e.img;	
+			drawpreviewImage(data.id,data.nativeImage);
+		}
+		
 		//inner Func
 		var changeDatei=function(e){
-			data.inputfiles=e.target.files;
-			
-			var file=data.inputfiles[0];//.path .name .size .type			
+			var file=e.target.files[0];//.path .name .size .type			
 			
 			var temp=file.name.split('.')[0];			
 			if(temp.indexOf("_")>0){
@@ -287,19 +345,27 @@ var vrstich_app=function(){
 
 				//Namsplit name(zähler)endung
 				data.name=file.name.split(couternum);
+				
+				inpText.innerHTML=data.name[0]+generatenummer(data.countFrom,data.counterzeichen)+data.name[1];
+				
+				saveSetting();
+				showDatei();
 			}
 			
 			if(changefunc!=undefined)changefunc();
 		}
 		var changeFrom=function(e){
 			data.countFrom=parseInt(this.value);
+			saveSetting();
 			if(changefunc!=undefined)changefunc();
 		}
 		
 		var changeTo=function(e){
 			data.countTo=parseInt(this.value);
+			saveSetting();
 			if(changefunc!=undefined)changefunc();
 		}
+		
 		
 		/*var imageLoaded=function(e){
 			console.log("geladen",e);
@@ -312,15 +378,10 @@ var vrstich_app=function(){
 			checkLadecyclus();
 		}*/
 		
-		//Events
-		input.addEventListener("change",changeDatei);
-		inputFrom.addEventListener("change",changeFrom);
-		inputTo.addEventListener("change",changeTo);
 		
-		/*bild.addEventListener("load",imageLoaded);
-		bild.addEventListener("onerror",imageErr);
-		console.log(bild);*/
 		
+		setSetting();
+		create();
 	}
 
 	var InputOrdner=function(ziel,changefunc){
@@ -328,41 +389,130 @@ var vrstich_app=function(){
 			"pfad":""
 		}
 		
+		var AB=new AppBridge();
+		
 		//API
 		this.getData=function(){return data;}
 		
 		
 		//Elemente
-		var input=cE(ziel,"input",undefined,"hiddenbutton");
-		input.type="file";
-		input.webkitdirectory="webkitdirectory";
-		
-		var input2=cE(ziel,"input",undefined,"butt100px");
-		input2.type="button";
-		input2.value=getWort("select");
-		
-		var spaninfo=cE(ziel,"span",undefined,"inputlabelpath");
-		spaninfo.innerHTML="";
+		var input,input2,spaninfo;
 		
 		//innerfunc
+		var create=function(){
+			input=cE(ziel,"input",undefined,"hiddenbutton");
+			input.type="file";
+			input.webkitdirectory="webkitdirectory";
+			
+			input2=cE(ziel,"input",undefined,"inputfilebutt");
+			input2.type="button";
+			input2.value=getWort("select");
+			
+			spaninfo=cE(ziel,"span",undefined,"inputlabelpath");
+			spaninfo.innerHTML=data.pfad;
+			
+			//Events
+			input.addEventListener("change",changeDatei);
+			input2.addEventListener("click",clickinpb);
+		}
+		
+		var setSetting=function(){
+			var property;
+			var set=Programmeinstellungen['outputOrdner'];
+			if(set!=undefined){				
+				for( property in set ) {
+					data[property]=set[property];
+				}
+			}
+		}
+		var saveSetting=function(){
+			Programmeinstellungen['outputOrdner']={
+				"pfad":data.pfad
+			};
+			//savig...
+			AB.DataIO(	"setoptionen", 
+						function(data){
+							if(data.status!=200)console.log(data);
+						},
+						Programmeinstellungen
+					 );
+		}
+		
+		
 		var changeDatei=function(e){
 			if(e.target.files.length>0){
 				var file=e.target.files[0];//.path .name .size .type			
 				data.pfad=file.path;
 				spaninfo.innerHTML=data.pfad;
 			}
+			
+			saveSetting();
+			
 			if(changefunc!=undefined)changefunc();
-			//console.log(data,e);
 		}
 		var clickinpb=function(e){
 			input.click();
 		}
 		
-		//Events
-		input.addEventListener("change",changeDatei);
-		input2.addEventListener("click",clickinpb);
+		setSetting();
+		create();
 	}
 	
+	var stitchOptionenInputs=function(ziel){
+		var data={
+			"abstand":10
+		}
+		var inputN;
+		var AB=new AppBridge();
+		
+		var setSetting=function(){
+			var property;
+			var set=Programmeinstellungen['stitchOption'];
+			if(set!=undefined){				
+				for( property in set ) {
+					data[property]=set[property];
+				}
+			}
+			
+			programmdaten.imageoverlap=data.abstand;
+		}
+		var saveSetting=function(){
+			Programmeinstellungen['stitchOption']={
+				"abstand":data.abstand
+			};
+			//savig...
+			AB.DataIO(	"setoptionen", 
+						function(data){
+							if(data.status!=200)console.log(data);
+						},
+						Programmeinstellungen
+					 );
+			programmdaten.imageoverlap=data.abstand;
+		}
+		
+		
+		var create=function(){
+			var p,span;
+			p=cE(ziel,"p");
+			span=cE(p,"span");
+			span.innerHTML=getWort("Abstand");
+			
+			inputN=cE(p,"input");
+			inputN.type="number";
+			inputN.min="0";			
+			inputN.value=data.abstand;
+			
+			inputN.addEventListener("change",changeInput);
+		}
+		
+		var changeInput=function(e){
+			data.abstand=parseInt(this.value);
+			saveSetting();
+		}
+		
+		setSetting();
+		create();
+	}
 	
 	var Progressbar=function(ziel,optionen){
 		if(ziel==undefined)return;
@@ -388,9 +538,9 @@ var vrstich_app=function(){
 			balken.style.width=value+"%";
 			if(s!=undefined){
 				if(s.indexOf('$v')>-1){
-					s=s.split('$v').join(value+"%");
+					s=s.split('$v').join(value+" %");
 				}
-				if(s.length==0)s=value+"%";
+				if(s.length==0)s=value+" %";
 				stext.innerHTML=s;
 			}
 			
@@ -477,7 +627,7 @@ var vrstich_app=function(){
 	var CreateProgramm=function(){
 		zielNode.innerHTML="";
 		
-		var i,nodeset,h1,input,span,p;
+		var i,nodeset,h1,input,span,p,ids,table,tr,td,tabhelper,trhelper,tdhelper;
 		
 		
 		//Quellen
@@ -486,13 +636,62 @@ var vrstich_app=function(){
 		h1.innerHTML=getWort("Quellen");
 		//[Pfad zu ersten Datei] [Anzahl Bilder/vonbis]
 		
-		programmdaten.quellen.push(new InputDateiStream(nodeset,"1",checkstartAvailable));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"1",checkstartAvailable));//Anzhahl auf rest verteilen?
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"2",checkstartAvailable));
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"3",checkstartAvailable));
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"4",checkstartAvailable));
-		programmdaten.quellen.push(new InputDateiStream(nodeset,"o",checkstartAvailable));
-		programmdaten.quellen.push(new InputDateiStream(nodeset,"u",checkstartAvailable));
-		/**/
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"5",checkstartAvailable));
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"6",checkstartAvailable));
+		
+		
+		tabhelper=cE(nodeset,"table",undefined,"vtab");
+		trhelper=cE(tabhelper,"tr");
+		tdhelper=cE(trhelper,"td",undefined,"noborder");
+		p=cE(tdhelper,"span");
+		p.innerHTML=getWort("Verteilung")+':';
+		
+		/*	Verteilung
+			[1][2][3]
+			[4][5][6]
+		*/
+		table=cE(tdhelper,"table",undefined,"vtab");
+		tr=cE(table,"tr");
+		td=cE(tr,"td");		td.innerHTML="1";
+		td=cE(tr,"td");		td.innerHTML="2";
+		td=cE(tr,"td");		td.innerHTML="3";
+		tr=cE(table,"tr");
+		td=cE(tr,"td");		td.innerHTML="4";
+		td=cE(tr,"td");		td.innerHTML="5";
+		td=cE(tr,"td");		td.innerHTML="6";
+		
+		
+		tdhelper=cE(trhelper,"td",undefined,"noborder");
+		p=cE(tdhelper,"span");
+		p.innerHTML=getWort("geometrie")+':';
+		/*	Würfel
+			   [6]
+			[1][2][3][4]
+			   [5]
+		*/
+		table=cE(tdhelper,"table",undefined,"vtab");
+		tr=cE(table,"tr");
+		td=cE(tr,"td",undefined,"noborder");
+		td=cE(tr,"td");		td.innerHTML="6";
+		td=cE(tr,"td",undefined,"noborder");
+		td=cE(tr,"td",undefined,"noborder");
+		
+		tr=cE(table,"tr");
+		td=cE(tr,"td");		td.innerHTML="1";
+		td=cE(tr,"td");		td.innerHTML="2";	
+		td=cE(tr,"td");		td.innerHTML="3";
+		td=cE(tr,"td");		td.innerHTML="4";
+		
+		tr=cE(table,"tr");
+		td=cE(tr,"td",undefined,"noborder");
+		td=cE(tr,"td");		td.innerHTML="5";
+		td=cE(tr,"td",undefined,"noborder");
+		td=cE(tr,"td",undefined,"noborder");
+		
 		
 		//Zielordner
 		nodeset=cE(zielNode,"div",undefined,"nodeset");
@@ -506,6 +705,9 @@ var vrstich_app=function(){
 		nodeset=cE(zielNode,"div",undefined,"nodeset");
 		h1=cE(nodeset,"h1");
 		h1.innerHTML=getWort("Stichoptionen");
+		
+		programmdaten.stitchoptionen=new stitchOptionenInputs(nodeset);
+		
 		
 		
 		//Action
@@ -521,10 +723,14 @@ var vrstich_app=function(){
 			function(e){
 					if(programmdaten.iscalc===true){
 						programmdaten.iscalc=false;
-						input.value=getWort("Berechnungstart");
+						if(programmdaten.calcpos>0)
+							input.value=getWort("Berechnungweiter");
+						else
+							input.value=getWort("Berechnungstart");
+						
 					}
 					else{
-						input.value=getWort("Berechnungstop");
+						input.value=getWort("Berechnungpause");
 						programmdaten.progressbar.set(0,"");
 						programmdaten.iscalc=true;
 						ladecyclus();
@@ -544,6 +750,13 @@ var vrstich_app=function(){
 		programmdaten.progressbar.set(0,"");
 		
 		programmdaten.canvas=cE(nodeset,"canvas",undefined,"calccanvas");
+		
+		for(i=0;i<programmdaten.quellen.length;i++){
+			programmdaten.quellen[i].showfirstPic();
+		}
+		
+		
+		checkstartAvailable();	
 	}
 	
 	var checkstartAvailable=function(){
@@ -566,6 +779,220 @@ var vrstich_app=function(){
 		for(i=0;i<programmdaten.quellen.length;i++){
 			programmdaten.quellen[i].loadFileNr(programmdaten.calcpos);
 		}
+	}
+	
+	var setOutputCanvas=function(size){
+		if(programmdaten.canvas==undefined)return;
+		
+		var b=size.width*3	+programmdaten.imageoverlap*6;//+überhanng*6
+		var h=size.height*2	+programmdaten.imageoverlap*4//+überhanng*4	
+		if(b!=programmdaten.canvas.width){
+			programmdaten.canvas.width=b;	
+			programmdaten.canvas.height=h;	
+		}	
+	}
+	
+	var drawBitmapTo=function(id,bitmap,px,py,size){
+		var tempcanvas,tempcanvascc,pix,xx,yy,dpos,cc,size,imgd,bb,hh,ol,ow,oh;
+		tempcanvas=document.createElement("canvas");
+		tempcanvas.width=size.width;
+		tempcanvas.height=size.height;
+		tempcanvascc=tempcanvas.getContext("2d");
+		imgd=tempcanvascc.getImageData(0,0,tempcanvas.width,tempcanvas.height);
+		
+		pix=imgd.data;//r,g,b,a
+			
+		for(yy=0;yy<tempcanvas.height;yy++)
+		for(xx=0;xx<tempcanvas.width;xx++){
+			dpos=(xx*4)+(yy)*tempcanvas.width*4;
+			pix[dpos+0]=bitmap[dpos+2];//r g b a  b g r a
+			pix[dpos+1]=bitmap[dpos+1];
+			pix[dpos+2]=bitmap[dpos+0];
+			pix[dpos+3]=bitmap[dpos+3];
+		}
+		tempcanvascc.putImageData(imgd,0,0);
+		
+		cc=programmdaten.canvas.getContext("2d");
+		cc.putImageData(imgd, 
+						programmdaten.imageoverlap+px*(programmdaten.imageoverlap*2+size.width) , 
+						programmdaten.imageoverlap+py*(programmdaten.imageoverlap*2+size.height) 
+						);
+		
+		//Einzelausschnitte verteilen....
+		/*	Verteilung
+			  5     5     5
+			4[1]2 1[2]3 2[3]4
+			  6     6     6
+			  5     2     4
+			3[4]1 1[5]3 1[6]3
+			  6     4     2
+		*/
+		
+		ol=programmdaten.imageoverlap;
+		ow=size.width;
+		oh=size.height;
+		if(id=="1"){			
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts  tempcanvas//qxy//qbh cc//zxy r
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,	cc,ol*2+ow,ol,	0);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh, 		cc,ol+ow,ol*3+oh,	0);
+						
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	cc,ow+2*ol,ol*2+oh, -90);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc,ol*3+ow, ol*4+oh*2, 90);
+		}		
+		if(id=="2"){
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,  cc,ol*4+ow*2,ol, 0);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol+ow,ol,	0);
+			
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ow+3*ol,ol*2+oh, 0);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*5+ow*2, ol*3+oh*2, 0);
+		}			
+		if(id=="3"){
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,  cc,0,ol*3+oh, 0);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*3+ow*2,ol,	0);
+			
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ol*3+oh,ol*3+ow*2, 90);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*2+oh, ow*3+ol*5, -90);
+		}		
+		if(id=="4"){
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,  cc,0,ol, 0);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol*5+ow*3,ol,	0);
+			
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, 3*ol+ow,3*ol+2*oh, 180);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, 5*ol+2*ow, 2*ol+oh, 180);
+		}		
+		if(id=="5"){
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,  cc,ol,ol*5+ow*2, -90);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol+oh,ol,	90);
+			
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ol,ol*3+oh*2, 180);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, 3*ol+ow,ol+oh, 0);
+		}
+		if(id=="6"){
+			bb=programmdaten.imageoverlap;
+			hh=size.height;
+			//rechts
+			drawCutImg(tempcanvas,	ow-bb,0,	bb,hh,  cc,0,ol*5+ow*2, 90);			
+			//links
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, -oh,ol,	-90);
+			
+			bb=size.width;
+			hh=programmdaten.imageoverlap;
+			//unten		
+			drawCutImg(tempcanvas,	0,oh-hh,	bb,hh,	 cc, ol*3+ow,0, 0);
+			//oben
+			drawCutImg(tempcanvas,	0,0,	bb,hh,  	cc, ol,ol*2+oh, 180);
+			
+			//eckenfiller
+			//TODO
+			drawEckenfiller(cc,0,0,ol,ol,"r|o");
+		}
+		
+	}
+	
+	var drawEckenfiller=function(cc,x,y,b,h ,richtung){
+		//richtung "u|l" "o|r" "r|u" "l|u" "r|o" "l|o" "u|l" "u|r"
+		//         von|langeseite
+		var r=richtung.split('|');
+		var stepx=1,stepy=1,xa=0,ya=0;
+		
+		if(r[0]=="r"){}//stepx=-1;xa=b;
+		if(r[0]=="l"){}
+		if(r[0]=="o"){}
+		if(r[0]=="u"){}//stepy=-1;ya=h;
+		
+		if(r[1]=="r"){}
+		if(r[1]=="l"){}
+		if(r[1]=="o"){}
+		if(r[1]=="u"){}
+		
+		
+	}
+	
+	var drawCutImg=function(quelle,qx,qy,qb,qh,  ccziel,zx,zy,r){
+			ccziel.save();
+			if(r==-90){
+				ccziel.translate(0,qb);
+				zx=-(zx+qh);
+			}
+			if(r==90){	
+				ccziel.translate(0,0);
+				zy=-(zy+qh);
+			}
+			if(r==180){
+				zx=-(zx+qb);
+				zy=-(zy+qh);
+			}
+			
+			
+			ccziel.rotate(r*Math.PI/180);
+			ccziel.translate(zx,zy);
+			
+			ccziel.drawImage(quelle,
+							qx,qy,	//qxy
+							qb,qh, 	//qbh
+							0,0,   	//x,y
+							qb,qh 	//bh
+						);						
+			ccziel.restore();
+		
+	}
+	
+	
+	var drawpreviewImage=function(id,nativeImage){
+		var bitmap,tempcanvascc,pix,xx,yy,dpos,cc,size,
+				px=0,py=0;
+		
+		if(id=="1"){px=0;py=0;}
+		if(id=="2"){px=1;py=0;}
+		if(id=="3"){px=2;py=0;}
+		if(id=="4"){px=0;py=1;}
+		if(id=="5"){px=1;py=1;}
+		if(id=="6"){px=2;py=1;}
+		
+		size=nativeImage.getSize();//.width .height
+		setOutputCanvas(size);
+		
+		bitmap=nativeImage.getBitmap();//r,g,b,a 1440000 600x600
+		drawBitmapTo(id,bitmap,px,py,size);
 	}
 	
 	var checkLadecyclus=function(){
@@ -596,9 +1023,7 @@ var vrstich_app=function(){
 			size=nimg.getSize();//.width .height
 			
 			//Größe des Canvas setzen
-			programmdaten.canvas.width=size.width*3		+programmdaten.imageoverlap*6;	//+überhanng*6
-			programmdaten.canvas.height=size.height*2	+programmdaten.imageoverlap*4;	//+überhanng*4
-			
+			setOutputCanvas(size);
 			
 			//alle zeichnen
 			px=0;
@@ -611,31 +1036,7 @@ var vrstich_app=function(){
 				
 				bitmap=nimg.getBitmap();//r,g,b,a 1440000 600x600
 				
-				tempcanvas=document.createElement("canvas");
-				tempcanvas.width=size.width;
-				tempcanvas.height=size.height;
-				tempcanvascc=tempcanvas.getContext("2d");
-				imgd=tempcanvascc.getImageData(0,0,tempcanvas.width,tempcanvas.height);
-				//imgd.data=bitmap;read only!
-				pix=imgd.data;//r,g,b,a
-				xx,yy,dpos;
-				
-				for(yy=0;yy<tempcanvas.height;yy++)
-				for(xx=0;xx<tempcanvas.width;xx++){
-					dpos=(xx*4)+(yy)*tempcanvas.width*4;
-					pix[dpos+0]=bitmap[dpos+2];//r g b a  b g r a
-					pix[dpos+1]=bitmap[dpos+1];
-					pix[dpos+2]=bitmap[dpos+0];
-					pix[dpos+3]=bitmap[dpos+3];
-				}
-				
-				
-				cc=programmdaten.canvas.getContext("2d");
-				cc.putImageData(imgd, 
-								px*(programmdaten.imageoverlap*2+size.width) , 
-								py*(programmdaten.imageoverlap*2+size.height) 
-								);
-				//TODO:einzelteile verteilen....
+				drawBitmapTo(d.id,bitmap,px,py,size);
 				
 				//d.id "1"..."o","u"
 				//next zielpos
@@ -660,6 +1061,7 @@ var vrstich_app=function(){
 				programmdaten.progressbar.set(100,"");
 				programmdaten.iscalc=false;
 				programmdaten.calcpos=0;
+				programmdaten.startbutt.value=getWort("Berechnungstart");
 				//programmdaten.calcpos=0;
 			}
 		}

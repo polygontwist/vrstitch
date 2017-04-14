@@ -8,13 +8,19 @@ var sprachen=[
 		 "loading":"lade daten...",
 		 "Quellen":"Quellen",
 		 "Zählervon":"Zähler von",
-		 "bis":"bis",
-		 "Stichoptionen":"Stichoptionen",
+		 "bis":" bis",
+		 "Stichoptionen":"Stitchoptionen",
 		 "Zielordner":"Zielordner",
+		 "dateiselect":"Datei auswählen",
+		 "nichtsgewaehlt":"nichts gewählt",
 		 "select":"auswählen",
 		 "Aktion":"Aktion",
+		 "Verteilung":"Verteilung",
+		 "geometrie":"Würfel Geometrie",
+		 "Abstand":"Abstand",
 		 "Berechnungstart":"Berechnung starten",
-		 "Berechnungstop":"Berechnung stoppen"
+		 "Berechnungweiter":"Berechnung fortsetzen",
+		 "Berechnungpause":"Berechnung pausieren"
 		 
 		}
 	},
@@ -22,15 +28,21 @@ var sprachen=[
 	 "description":"english",
 	 "words":{
 		 "loading":"loading...",
-		 "Quellen":"Sources",
-		 "Zählervon":"Counter from",
-		 "bis":"to",
-		 "Stichoptionen":"Optionen",
-		 "Zielordner":"Destination folder",
+		 "Quellen":"sources",
+		 "Zählervon":"counter from",
+		 "bis":" to",
+		 "Stichoptionen":"optionen",
+		 "Zielordner":"destination folder",
+		 "dateiselect":"select File",
+		  "nichtsgewaehlt":"nothing selected",
 		 "select":"select",
 		 "Aktion":"Action",
-		 "Berechnungstart":"Start calculation",
-		 "Berechnungstop":"Stop calculation"
+		 "Verteilung":"spread",
+		 "geometrie":"cube geometry",
+		 "Abstand":"distance",
+		 "Berechnungstart":"start calculation",
+		 "Berechnungweiter":"continue the calculation",
+		  "Berechnungpause":"pause calculation"
 	 }
 	}
 ];
