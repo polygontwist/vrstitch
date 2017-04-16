@@ -45,3 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+wuerfel.bak
+*.c4d
+wuerfel.wrl
+wuerfel2.wrl
+dist/win-unpacked/*
