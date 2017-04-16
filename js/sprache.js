@@ -22,6 +22,7 @@ var sprachen=[
 		 "Verteilung":"Verteilung",
 		 "geometrie":"Würfel Geometrie",
 		 "Abstand":"Abstand",
+		 "Dateierzeugtin":"Datei erzeugt in",
 		 "Berechnungstart":"Berechnung starten",
 		 "Berechnungweiter":"Berechnung fortsetzen",
 		 "Berechnungpause":"Berechnung pausieren"
@@ -48,6 +49,7 @@ var sprachen=[
 		 "Verteilung":"spread",
 		 "geometrie":"cube geometry",
 		 "Abstand":"distance",
+		 "Dateierzeugtin":"File generated in",
 		 "Berechnungstart":"start calculation",
 		 "Berechnungweiter":"continue the calculation",
 		  "Berechnungpause":"pause calculation"

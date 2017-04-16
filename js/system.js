@@ -6,7 +6,7 @@
 var vrstich_app=function(){
 	var Programmeinstellungen={//als Einstellungen gespeichert
 		windowsize:{x:0,y:0,width:0,height:0},
-		showDevTool:true,
+		showDevTool:false,
 		zieldateiname:"",
 		inputzieldateityp:"png"
 	};
@@ -28,6 +28,62 @@ var vrstich_app=function(){
 		zielsize:{width:0,height:0},
 		imageoverlap:10 //px
 	}
+	
+	
+	var vorlage_vrml2=[
+		"#VRML V2.0 utf8",
+		"#vrstitch 0.1",
+		"DEF wuerfel Transform {",
+		"	children [ ",
+		"	Shape {",
+		"      appearance Appearance {",
+		"        material Material {",
+		"        }",
+		"      }",
+		"      geometry DEF FACESET_wuerfel IndexedFaceSet {",
+		"        ccw FALSE",
+		"        solid FALSE",
+		"        creaseAngle 1.396263",
+		"        coord Coordinate {",
+		"          point [ -100 -100 -100,",		//zyx
+				"-100 100 -100,",	
+				"-100 100 100,",	
+				"-100 -100 100,",	
+				"100 100 100,",	
+				" 100 -100 100,",	
+				"100 100 -100,",	
+				"100 -100 -100",
+		"          ]",
+		"        }",
+		"        texCoord TextureCoordinate {",
+		"          point [ ",			// x(u) y(v)      0/0->links-unten
+		"            $texcoord",
+		"            ",
+		"          ]",
+		"        }",
+		"        coordIndex [ ",	
+				"0,1,2,3,-1,",		//l
+				"3,2,4,5,-1,",		//h
+				"5,4,6,7,-1,",		//r
+				"7,6,1,0,-1,",		//v
+				"1,6,4,2,-1,",		//o
+				"7,0,3,5,-1",		//u
+		"        ]",
+		"        texCoordIndex [ ",	
+				"2,5,8,11,-1,",		//l
+				"10,7,14,17,-1,",	//h	
+				"16,13,20,23,-1,",	//r	
+				"22,19,4,1,-1,",	//v	
+				"3,18,12,6,-1,",	//o	
+				"21,0,9,15,-1",		//u
+		"        ]",
+		"      }",
+		"    }",
+		"  ]",
+		"}",
+		""
+	];
+	
 	
 	
 	//--basic--
@@ -184,12 +240,15 @@ var vrstich_app=function(){
 		//console.log(s,data);
 		if(s=="resize"){
 			Programmeinstellungen.windowsize=data;
-			AppBrComIO("setoptionen", 
-						function(data){
-							if(data.status!=200)console.log(data);
-						},
-						Programmeinstellungen);
+			saveOptionen();
 		}
+	}
+	
+	var saveOptionen=function(){
+		gAB.DataIO(	"setoptionen", 
+				function(data){if(data.status!=200)console.log(data);},
+				Programmeinstellungen
+				)
 	}
 	
 	//--Elemente--
@@ -303,12 +362,7 @@ var vrstich_app=function(){
 				"counterzeichen":data.counterzeichen
 			};
 			//savig...
-			AB.DataIO(	"setoptionen", 
-						function(data){
-							if(data.status!=200)console.log(data);
-						},
-						Programmeinstellungen
-					 );
+			saveOptionen();
 		}
 		
 		var fileloaded=function(e){
@@ -436,12 +490,7 @@ var vrstich_app=function(){
 				"pfad":data.pfad
 			};
 			//savig...
-			AB.DataIO(	"setoptionen", 
-						function(data){
-							if(data.status!=200)console.log(data);
-						},
-						Programmeinstellungen
-					 );
+			saveOptionen();
 		}
 		
 		
@@ -487,7 +536,7 @@ var vrstich_app=function(){
 				"abstand":data.abstand
 			};
 			//savig...
-			AB.DataIO(	"setoptionen", 
+			AB.DataIO(	"F", 
 						function(data){
 							if(data.status!=200)console.log(data);
 						},
@@ -715,10 +764,7 @@ var vrstich_app=function(){
 		input.value=Programmeinstellungen.zieldateiname;
 		input.addEventListener("change",function(e){
 					Programmeinstellungen.zieldateiname=this.value;
-					gAB.DataIO(	"setoptionen", 
-						function(data){if(data.status!=200)console.log(data);},
-						Programmeinstellungen
-					);
+					saveOptionen();
 				})
 		programmdaten.inputzieldateiname=input;
 		p=cE(nodeset,"span",undefined,"inputlabelfilename");
@@ -727,10 +773,7 @@ var vrstich_app=function(){
 		input=cE(nodeset,"select");
 		input.addEventListener("change",function(e){
 					Programmeinstellungen.inputzieldateityp=e.target.value;
-					gAB.DataIO(	"setoptionen", 
-							function(data){if(data.status!=200)console.log(data);},
-							Programmeinstellungen
-					);
+					saveOptionen();
 				});
 		p=	cE(input,"option");
 		p.value="png";
@@ -750,6 +793,7 @@ var vrstich_app=function(){
 		programmdaten.stitchoptionen=new stitchOptionenInputs(nodeset);
 		
 		//Export 3D
+
 		nodeset=cE(zielNode,"div",undefined,"nodeset");
 		h1=cE(nodeset,"h1");
 		h1.innerHTML=getWort("export3d");
@@ -757,12 +801,7 @@ var vrstich_app=function(){
 		input=cE(nodeset,"input");
 		input.type="button";
 		input.value=getWort("export");
-		input.addEventListener("click",
-			function(e){
-					console.log("TODO");
-				}
-			);
-//TODO		
+		input.addEventListener("click",exportVRML);
 		
 		
 		
@@ -1152,8 +1191,7 @@ var vrstich_app=function(){
 			ccziel.restore();
 		
 	}
-	
-	
+		
 	var drawpreviewImage=function(id,nativeImage){
 		var bitmap,tempcanvascc,pix,xx,yy,dpos,cc,size,
 				px=0,py=0;
@@ -1243,7 +1281,6 @@ var vrstich_app=function(){
 		
 	}
 	
-
 	//https://github.com/mattdesl/electron-canvas-to-buffer/blob/master/index.js
 	var canvasToImg=function(canvas,type,quality){
 		if(quality==undefined)quality=1;
@@ -1279,19 +1316,114 @@ var vrstich_app=function(){
 				+generatenummer(programmdaten.calcpos,4)
 				+"."+Programmeinstellungen.inputzieldateityp;
 		
-		
-		
-		/**/
 		//programmdaten.canvas -->
 		var buffer = canvasToImg(programmdaten.canvas, 'image/'+Programmeinstellungen.inputzieldateityp,1);
 		
 		//writeFile
 		//console.log("writeto",pfad+dateiname);
 		fs.writeFileSync( pfad+dateiname, buffer);
-		
 	}
 	
+
+/*
+		0	0.33863 0.300434,			//u1
+		1	0.339597 0.692828,	//v ul
+        2   0.189558 0.689573,
+		3	0.671626 0.007094,
+		4	0.339853 0.990683,	//v ol
+		5	0.190455 0.988301,
+		6	0.671284 0.297327,
+        7   0.186896 0.296898,
+		8	0.006786 0.990772,
+		9	0.339972 0.007767,
+		10	0.18747 0.006273,
+		11	0.005889 0.692044,
+        12  0.992698 0.298118,
+		13	0.994935 0.990406,
+		14	0.004506 0.298898,
+		15	0.527752 0.005827,
+		16	0.995145 0.691082,
+        17  0.005721 0.007183,
+		18	0.993826 0.007165,
+		19	0.529142 0.990008,	//v or
+		20	0.672281 0.990998,
+		21	0.52641 0.298494,
+        22  0.528886 0.692152,	//v ur
+		23	0.6727 0.693766
+*/
+
+	var getTexCoord=function(){
+		var i;
+		var cw=programmdaten.canvas.width;	//=100%b
+		var ch=programmdaten.canvas.height;	//=100%h
+		var ol=programmdaten.imageoverlap;
+		var ow=(cw-ol*6)/3;
+		var oh=(ch-ol*4)/2;
+		
+		var olw=1/cw*ol;
+		var olh=1/ch*ol;
+		ow=1/cw*ow;
+		oh=1/ch*oh;
+		
+		var re="";
+		
+		// x(u) y(v)      0/0->links-unten
+		var code=[
+			[olw*3+ow, 	olh+oh],
+			[olw*3+ow,	olh*3+oh],
+			[olw+ow,	olh*3+oh],
+			[olw*5+ow*2,olh],
+			[olw*3+ow,	olh*3+oh*2],
+			[olw+ow,	olh*3+oh*2],
+			[olw*5+ow*2,olh+oh],
+			[olw+ow,	olh+oh],
+			[olw,		olh*3+oh*2],
+			[olw*3+ow,	olh],
+			[olw+ow,	olh],
+			[olw,		olh*3+oh],
+			[olw*5+ow*3,olh+oh],
+			[olw*5+ow*3,olh*3+oh*2],
+			[olw,		olh+oh],
+			[olw*3+ow*2,olh],
+			[olw*5+ow*3,olh*3+oh],
+			[olw,		olh],
+			[olw*5+ow*3,olh],
+			[olw*3+ow*2,olh*3+oh*2],
+			[olw*5+ow*2,olh*3+oh*2],
+			[olw*3+ow*2,olh+oh],
+			[olw*3+ow*2,olh*3+oh],
+			[olw*5+ow*2,olh*3+oh]
+		];
+		for(i=0;i<code.length;i++){
+			re+=code[i][0]+' '+code[i][1];
+			if(i<code.length-1)
+				re+=",\n";
+			else
+				re+="\n";
+		}
+		
+		return re;
+	}
 	
+	var exportVRML=function(e){
+		var opfad=Programmeinstellungen['outputOrdner'];
+		if(opfad==undefined)return;
+		var pfad=opfad.pfad+'\\';
+		
+		var dateiname=Programmeinstellungen.zieldateiname.split('_').join("")+".wrl";
+		
+		var s,i,datei="";
+		for(i=0;i<vorlage_vrml2.length;i++){
+			s=vorlage_vrml2[i];
+			if(s.indexOf("$texcoord")>-1)
+					s=s.split("$texcoord").join(getTexCoord());
+			datei+=s+'\n';
+		}
+		
+		//saving
+		fs.writeFileSync( pfad+dateiname, datei ,'utf8');
+		alert(getWort("Dateierzeugtin")+" \n"+pfad+dateiname);
+	}
 }
 
 
