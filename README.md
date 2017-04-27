@@ -6,6 +6,8 @@ Dazu der passende VRML2 export eines Würfels, für die Verwendung als Basiskör
 Ich hatte beim Mappen einer Textur auf einen Würfel das Problem, das einige Ränder nicht sauber waren.
 Deshalb entstand dieses Programm um eine Textur zu produzieren, die besser passt. Auch sollte der Platz auf der Textur so gut wie möglich ausgenutzt werden.
 
+![Fehler](https://github.com/polygontwist/vrstitch/blob/master/work/fehlervrstitch.png)
+
 # Idee
 Wenn ich eine Textur generiere die etwas Spielraum läßt, sollten die Kanten sauber werden. Wenn nämlich zwei Vierecke nebeneinander liewgen, war das Ergebnis sauber.
 Deshalb wird für jede Fläche des Würfels ein Texturbereich mit fortführenden Kanten generiert:
