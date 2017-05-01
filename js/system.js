@@ -366,11 +366,18 @@ var vrstich_app=function(){
 		}
 		
 		var fileloaded=function(e){
-			data.nativeImage=e.img;			
-			if(!e.img.isEmpty())
+			data.nativeImage=e.img;	
+			
+			if (typeof e.img.getBitmap === 'function'){
+				if(!e.img.isEmpty())
+					data.ladestatus="ready";
+					else
+					data.ladestatus="ERR";				
+				//data.typ="nativeImage";				
+			}else{				
 				data.ladestatus="ready";
-				else
-				data.ladestatus="ERR";
+				//data.typ="bitmap";
+			}
 			
 			checkLadecyclus();
 		}
@@ -425,18 +432,6 @@ var vrstich_app=function(){
 			saveSetting();
 			if(changefunc!=undefined)changefunc();
 		}
-		
-		
-		/*var imageLoaded=function(e){
-			console.log("geladen",e);
-			data.ladestatus="ready";
-			checkLadecyclus();
-		}
-		var imageErr=function(e){
-			data.ladestatus="ERR";
-			console.log("loaderror",e);
-			checkLadecyclus();
-		}*/
 		
 		
 		
@@ -692,7 +687,7 @@ var vrstich_app=function(){
 		h1.innerHTML=getWort("Quellen");
 		//[Pfad zu ersten Datei] [Anzahl Bilder/vonbis]
 		
-		programmdaten.quellen.push(new InputDateiStream(nodeset,"1",checkstartAvailable));//Anzhahl auf rest verteilen?
+		programmdaten.quellen.push(new InputDateiStream(nodeset,"1",checkstartAvailable));//Anzahl auf rest verteilen?
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"2",checkstartAvailable));
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"3",checkstartAvailable));
 		programmdaten.quellen.push(new InputDateiStream(nodeset,"4",checkstartAvailable));
@@ -887,7 +882,7 @@ var vrstich_app=function(){
 		}	
 	}
 	
-	var drawBitmapTo=function(id,bitmap,px,py,size){
+	var drawBitmapTo=function(id,bitmap,px,py,size,is_rgba){
 		var tempcanvas,tempcanvascc,pix,xx,yy,dpos,cc,size,imgd,bb,hh,ol,ow,oh;
 		tempcanvas=document.createElement("canvas");
 		tempcanvas.width=size.width;
@@ -900,10 +895,19 @@ var vrstich_app=function(){
 		for(yy=0;yy<tempcanvas.height;yy++)
 		for(xx=0;xx<tempcanvas.width;xx++){
 			dpos=(xx*4)+(yy)*tempcanvas.width*4;
-			pix[dpos+0]=bitmap[dpos+2];//r g b a  b g r a
-			pix[dpos+1]=bitmap[dpos+1];
-			pix[dpos+2]=bitmap[dpos+0];
-			pix[dpos+3]=bitmap[dpos+3];
+			if(is_rgba){
+				pix[dpos+0]=bitmap[dpos+0];//r g b a  b g r a
+				pix[dpos+1]=bitmap[dpos+1];
+				pix[dpos+2]=bitmap[dpos+2];
+				pix[dpos+3]=bitmap[dpos+3];
+				
+			}
+			else{
+				pix[dpos+0]=bitmap[dpos+2];//r g b a  b g r a
+				pix[dpos+1]=bitmap[dpos+1];
+				pix[dpos+2]=bitmap[dpos+0];
+				pix[dpos+3]=bitmap[dpos+3];				
+			}
 		}
 		tempcanvascc.putImageData(imgd,0,0);
 		
@@ -1192,7 +1196,7 @@ var vrstich_app=function(){
 		
 	}
 		
-	var drawpreviewImage=function(id,nativeImage){
+	var drawpreviewImage=function(id,natImage){
 		var bitmap,tempcanvascc,pix,xx,yy,dpos,cc,size,
 				px=0,py=0;
 		
@@ -1203,11 +1207,35 @@ var vrstich_app=function(){
 		if(id=="5"){px=1;py=1;}
 		if(id=="6"){px=2;py=1;}
 		
-		size=nativeImage.getSize();//.width .height
-		setOutputCanvas(size);
+		if (typeof natImage.getBitmap === 'function'){
+			console.log("nativeImage");
+			size=natImage.getSize();//.width .height
+			setOutputCanvas(size);
+		}else{
+			console.log("only Image");
+			size={"width":natImage.width,"height":natImage.width};
+			setOutputCanvas(size);
+		}
 		
-		bitmap=nativeImage.getBitmap();//r,g,b,a 1440000 600x600
-		drawBitmapTo(id,bitmap,px,py,size);
+		if (typeof natImage.getBitmap === 'function')
+		{			
+			bitmap=natImage.getBitmap();//r,g,b,a 1440000 600x600
+			drawBitmapTo(id,bitmap,px,py,size,false);
+		}
+		else{
+			
+			var hcan=document.createElement("canvas");
+			hcan.width=natImage.width;
+			hcan.height=natImage.height;
+			var hcanCC=hcan.getContext("2d");
+			hcanCC.drawImage(natImage,0,0);
+			
+			var himgd=hcanCC.getImageData(0,0,hcan.width,hcan.height);		
+			var hpix=himgd.data;//r,g,b,a
+			
+			drawBitmapTo(id,hpix,px,py,size,true);
+		}
+		
 	}
 	
 	var checkLadecyclus=function(){
@@ -1235,7 +1263,12 @@ var vrstich_app=function(){
 			//erstes Bild holen, für Gesammtgröße
 			d=programmdaten.quellen[0].getData();
 			nimg=d.nativeImage;
-			size=nimg.getSize();//.width .height
+			if (typeof nimg.getBitmap === 'function'){				
+				size=nimg.getSize();//.width .height				
+			}
+			else{
+				size={"width":nimg.width,"height":nimg.height};
+			}
 			
 			//Größe des Canvas setzen
 			setOutputCanvas(size);
@@ -1245,14 +1278,28 @@ var vrstich_app=function(){
 			py=0;
 			for(i=0;i<programmdaten.quellen.length;i++){
 				d=programmdaten.quellen[i].getData();
-				d.ladestatus="";
+				if(d.ladestatus==="ready")d.ladestatus="";
 				nimg=d.nativeImage;
-				size=nimg.getSize();
 				
-				bitmap=nimg.getBitmap();//r,g,b,a 1440000 600x600
-				
-				drawBitmapTo(d.id,bitmap,px,py,size);
-				
+				if (typeof nimg.getBitmap === 'function'){
+					size=nimg.getSize();
+					bitmap=nimg.getBitmap();//r,g,b,a 1440000 600x600					
+					drawBitmapTo(d.id,bitmap,px,py,size,false);
+				}else{
+					//console.log("kein getBitmap :-(");
+					var hcan=document.createElement("canvas");
+					hcan.width=nimg.width;
+					hcan.height=nimg.height;
+					var hcanCC=hcan.getContext("2d");
+					hcanCC.drawImage(nimg,0,0);
+					
+					size={"width":hcan.width,"height":hcan.height};
+					
+					var himgd=hcanCC.getImageData(0,0,hcan.width,hcan.height);		
+					var hpix=himgd.data;//r,g,b,a					
+					
+					drawBitmapTo(d.id,hpix,px,py,size,true);
+				}
 				//d.id "1"..."o","u"
 				//next zielpos
 				px++;

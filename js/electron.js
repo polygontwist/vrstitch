@@ -81,8 +81,58 @@ var AppBridge=function(){//temporärres Objekt für DatiIO, etc.
 		
 		if(aktion=="getImage"){			
 			var img = nativeImage.createFromPath(datenJSON.url);
-			var dataRE={"status":200,"msg":"OK","img":img};
-			if(refunction!=undefined)refunction(dataRE);
+			
+			if (typeof img.getBitmap === 'function'){	
+				var dataRE={"status":200,"msg":"OK","img":img};
+				if(refunction!=undefined)refunction(dataRE);
+			}
+			else{
+				var imgstr=img.toDataURL();
+					var helperimg=new Image;
+					helperimg.onload = function(){
+						var dataRE={"status":200,"msg":"OK","img":helperimg};
+						if(refunction!=undefined)refunction(dataRE);					  
+					};
+					helperimg.src=imgstr;
+			}
+			
+			/*
+			build:
+				getNativeHandle()
+				getSize()
+				isEmpty()
+				isTemplateImage()
+				setTemplateImage()
+				toDataURL()
+				toJpeg()
+				toPng()
+				
+				
+			test:	
+				getNativeHandle()
+				getSize()
+				isEmpty()
+				isTemplateImage()
+				setTemplateImage()
+				toDataURL()
+				toJpeg()
+				toPng()				
+				
+				NativeImage()
+				crop()
+				getAspectRatio()
+				getBitmap()
+				resize()
+				toBitmap()
+				toJPEG()
+				toPNG()
+			*/
+			
+			
+			
+			
+			
+			
 		}
 		else
 		if(aktion=="getfile"){

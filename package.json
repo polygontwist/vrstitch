@@ -2,7 +2,7 @@
   "name": "VRStitch",
   "productName": "VRStitch",
   "description": "360VRPicSticher",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Andreas Kosmehl (ak@a-d-k.de)",
   "main": "main.js",
   "scripts": {
