@@ -32,7 +32,7 @@ var vrstich_app=function(){
 	
 	var vorlage_vrml2=[
 		"#VRML V2.0 utf8",
-		"#vrstitch 0.1",
+		"#vrstitch 0.3",
 		"DEF wuerfel Transform {",
 		"	children [ ",
 		"	Shape {",
@@ -40,19 +40,19 @@ var vrstich_app=function(){
 		"        material Material {",
 		"        }",
 		"      }",
-		"      geometry DEF FACESET_wuerfel IndexedFaceSet {",
+		"      geometry DEF wuerfel IndexedFaceSet {",
 		"        ccw FALSE",
 		"        solid FALSE",
 		"        creaseAngle 1.396263",
 		"        coord Coordinate {",
-		"          point [ -100 -100 -100,",		//zyx
-				"-100 100 -100,",	
+		"          point [-100 -100 100,",		//zyx
 				"-100 100 100,",	
-				"-100 -100 100,",	
+				"-100 100 -100,",	
+				"-100 -100 -100,",	
+				"100 -100 100,",	
 				"100 100 100,",	
-				" 100 -100 100,",	
-				"100 100 -100,",	
-				"100 -100 -100",
+				"100 -100 -100,",	
+				"100 100 -100",
 		"          ]",
 		"        }",
 		"        texCoord TextureCoordinate {",
@@ -63,19 +63,19 @@ var vrstich_app=function(){
 		"        }",
 		"        coordIndex [ ",	
 				"0,1,2,3,-1,",		//l
-				"3,2,4,5,-1,",		//h
-				"5,4,6,7,-1,",		//r
-				"7,6,1,0,-1,",		//v
-				"1,6,4,2,-1,",		//o
-				"7,0,3,5,-1",		//u
+				"4,5,1,0,-1,",		//h
+				"6,7,5,4,-1,",		//r
+				"3,2,7,6,-1,",		//v
+				"1,5,7,2,-1,",		//o
+				"4,0,3,6,-1",		//u
 		"        ]",
 		"        texCoordIndex [ ",	
 				"2,5,8,11,-1,",		//l
-				"10,7,14,17,-1,",	//h	
-				"16,13,20,23,-1,",	//r	
-				"22,19,4,1,-1,",	//v	
-				"3,18,12,6,-1,",	//o	
-				"21,0,9,15,-1",		//u
+				"14,17,4,1,-1,",	//h	
+				"20,23,16,13,-1,",	//r	
+				"10,7,22,19,-1,",	//v	
+				"3,15,21,6,-1,",	//o	
+				"12,0,9,18,-1",		//u
 		"        ]",
 		"      }",
 		"    }",
@@ -83,6 +83,7 @@ var vrstich_app=function(){
 		"}",
 		""
 	];
+	
 	
 	
 	
@@ -1372,33 +1373,6 @@ var vrstich_app=function(){
 	}
 	
 
-/*
-		0	0.33863 0.300434,			//u1
-		1	0.339597 0.692828,	//v ul
-        2   0.189558 0.689573,
-		3	0.671626 0.007094,
-		4	0.339853 0.990683,	//v ol
-		5	0.190455 0.988301,
-		6	0.671284 0.297327,
-        7   0.186896 0.296898,
-		8	0.006786 0.990772,
-		9	0.339972 0.007767,
-		10	0.18747 0.006273,
-		11	0.005889 0.692044,
-        12  0.992698 0.298118,
-		13	0.994935 0.990406,
-		14	0.004506 0.298898,
-		15	0.527752 0.005827,
-		16	0.995145 0.691082,
-        17  0.005721 0.007183,
-		18	0.993826 0.007165,
-		19	0.529142 0.990008,	//v or
-		20	0.672281 0.990998,
-		21	0.52641 0.298494,
-        22  0.528886 0.692152,	//v ur
-		23	0.6727 0.693766
-*/
-
 	var getTexCoord=function(){
 		var i;
 		var cw=programmdaten.canvas.width;	//=100%b
@@ -1415,31 +1389,32 @@ var vrstich_app=function(){
 		var re="";
 		
 		// x(u) y(v)      0/0->links-unten
+			
 		var code=[
-			[olw*3+ow, 	olh+oh],
-			[olw*3+ow,	olh*3+oh],
-			[olw+ow,	olh*3+oh],
-			[olw*5+ow*2,olh],
-			[olw*3+ow,	olh*3+oh*2],
-			[olw+ow,	olh*3+oh*2],
-			[olw*5+ow*2,olh+oh],
-			[olw+ow,	olh+oh],
-			[olw,		olh*3+oh*2],
-			[olw*3+ow,	olh],
-			[olw+ow,	olh],
-			[olw,		olh*3+oh],
-			[olw*5+ow*3,olh+oh],
-			[olw*5+ow*3,olh*3+oh*2],
-			[olw,		olh+oh],
-			[olw*3+ow*2,olh],
-			[olw*5+ow*3,olh*3+oh],
-			[olw,		olh],
-			[olw*5+ow*3,olh],
-			[olw*3+ow*2,olh*3+oh*2],
-			[olw*5+ow*2,olh*3+oh*2],
-			[olw*3+ow*2,olh+oh],
-			[olw*3+ow*2,olh*3+oh],
-			[olw*5+ow*2,olh*3+oh]
+			[olw*3+ow,	olh],		//0
+			[olw+ow,	olh],		//1
+			[olw,		olh*3+oh],	//2
+			[olw*5+ow*2,olh+oh],	//3
+			[olw+ow,	olh+oh],	//4
+			[olw,		olh*3+oh*2],//5
+			[olw*5+ow*2,olh],		//6
+			[olw*3+ow,	olh*3+oh*2],//7
+			[olw+ow,	olh*3+oh*2],//8
+			[olw*3+ow, 	olh+oh],	//9
+			[olw*3+ow,	olh*3+oh],	//10
+			[olw+ow,	olh*3+oh],	//11
+			[olw*3+ow*2,olh],		//12
+			[olw*5+ow*3,olh*3+oh],	//13
+			[olw,		olh],		//14
+			[olw*5+ow*3,olh+oh],	//15
+			[olw*5+ow*3,olh*3+oh*2],//16
+			[olw,		olh+oh],	//17
+			[olw*3+ow*2,olh+oh],	//18
+			[olw*3+ow*2,olh*3+oh],	//19
+			[olw*5+ow*2,olh*3+oh],	//20
+			[olw*5+ow*3,olh],		//21
+			[olw*3+ow*2,olh*3+oh*2],//22
+			[olw*5+ow*2,olh*3+oh*2] //23
 		];
 		for(i=0;i<code.length;i++){
 			re+=code[i][0]+' '+code[i][1];
