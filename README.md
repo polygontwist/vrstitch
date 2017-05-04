@@ -29,4 +29,4 @@ Der gelbe Bereich wird dann automatisch aufgefüllt, in dem die Randpixel verdop
 # Ergebnis
 
 Ein Test mit WebGL sieht gut aus:
-https://github.com/polygontwist/vrstitch/blob/master/work/texturok.png
+![WebGL Test](https://github.com/polygontwist/vrstitch/blob/master/work/texturok.png)
