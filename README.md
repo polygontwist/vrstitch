@@ -27,8 +27,6 @@ Mit dem Parameter "Abstand" in den "Strichoptionen" kann eingestellt werden, wie
 Der gelbe Bereich wird dann automatisch aufgefüllt, in dem die Randpixel verdoppelt werden.
 
 # Ergebnis
-Das Ergebnis der Textur sieht so aus:
 
-![Ergebnis](https://github.com/polygontwist/vrstitch/blob/master/work/output_0000.png)
-
-Ein Test mit WebGL steht noch aus.
+Ein Test mit WebGL sieht gut aus:
+https://github.com/polygontwist/vrstitch/blob/master/work/texturok.png
