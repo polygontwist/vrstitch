@@ -9,7 +9,7 @@ Deshalb entstand dieses Programm um eine Textur zu produzieren, die dies ausglei
 ![Fehler](https://github.com/polygontwist/vrstitch/blob/master/work/fehlervrstitch.png)
 
 # Idee
-Wenn ich eine Textur generiere die etwas Spielraum läßt, sollten die Kanten sauber werden. Wenn nämlich zwei Vierecke nebeneinander liewgen, war das Ergebnis sauber!
+Wenn ich eine Textur generiere die etwas Spielraum läßt, sollten die Kanten sauber werden. Wenn zwei Vierecke nebeneinander lagen, war das Ergebnis sauber!
 Deshalb wird für jede Fläche des Würfels ein Texturbereich mit fortführenden Kanten generiert:
 
 ![Aufbau](https://github.com/polygontwist/vrstitch/blob/master/work/aufbau.png)
